@@ -4,10 +4,11 @@ Provides some visuals that can be drawn in a scene.
 
 # IMPORTS
 import numpy as np
+
 from vispy import gloo, scene, visuals, io
 from vispy.color import get_colormap
 
-from ..utils import unique_rows
+from .  import utils
 
 class WireframeMeshVisual(visuals.MeshVisual):
     """
@@ -33,9 +34,9 @@ class WireframeMeshVisual(visuals.MeshVisual):
 
         # create wireframe mesh visual
         if edges is None and faces is not None:
-            edges = unique_rows(np.vstack(faces.take([[0, 1],
-                                                      [0, 2],
-                                                      [1, 2]], axis=1)))
+            edges = utils.unique_rows(np.vstack(faces.take([[0, 1],
+                                                            [0, 2],
+                                                            [1, 2]], axis=1)))
 
         # initialize mesh visual
         visuals.MeshVisual.__init__(self, vertices=vertices, faces=edges.ravel(),
