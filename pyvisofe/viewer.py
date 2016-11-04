@@ -6,46 +6,15 @@ Provides viewer class for several pysofe objects.
 import numpy as np
 from scipy.spatial import Delaunay
 
-# backends
-try:
-    import matplotlib.pyplot as plt
-except:
-    pass
+from . import canvas
 
-try:
-    from . import canvas
-except:
-    pass
-
-from .. import utils
-from ..meshes.mesh import Mesh
-from ..spaces.functions import FEFunction, MeshFunction
+if 0:
+    from pysofe import utils
+    from pysofe.meshes.mesh import Mesh
+    from pysofe.spaces.functions import FEFunction, MeshFunction
 
 # DEBUGGING
 from IPython import embed as IPS
-
-BACKEND = 'vispy'
-
-def use(backend):
-    """
-    Set visualisation backend.
-    
-    Parameters
-    ----------
-
-    backend : str ('vispy' | 'matplotlib')
-        The visualisation backend to use.
-    """
-
-    # to set global module variable
-    global BACKEND
-
-    if backend.lower() in ('matplotlib', 'mpl', 'pyplot'):
-        BACKEND = 'matplotlib'
-    elif backend.lower() in ('vispy',):
-        BACKEND = 'vispy'
-    else:
-        raise ValueError("Invalid visualisation backend ({})".format(backend))
 
 def refgrid(dimension=2, resolution=1):
     """
