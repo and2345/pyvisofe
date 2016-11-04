@@ -3,6 +3,7 @@ import numpy as np
 
 from vispy import scene
 from vispy.visuals import transforms
+from vispy.color import get_colormap
 
 from . import visuals
 
