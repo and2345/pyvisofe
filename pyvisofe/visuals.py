@@ -21,16 +21,16 @@ class WireframeMeshVisual(visuals.MeshVisual):
         The vertex coordinates
     
     faces : array_like
-        The face connectivity
+        The connectivity array of the triangular faces
 
-    edges : array_like
-        The edge connectivity
+    edges : array_like | None
+        The connectivity array of the edges
 
-    edge_color : str | vispy.color.Color
-        The color to use for the faces outline
+    edge_color : str | tuple | None
+        Color to use for the edges
     """
 
-    def __init__(self, vertices=None, faces=None, edges=None, edge_color='black', **kwargs):
+    def __init__(self, vertices=None, faces=None, edges=None, edge_color='black'):
 
         # create wireframe mesh visual
         if edges is None and faces is not None:
@@ -39,7 +39,7 @@ class WireframeMeshVisual(visuals.MeshVisual):
                                                             [1, 2]], axis=1)))
 
         # initialize mesh visual
-        visuals.MeshVisual.__init__(self, vertices=vertices, faces=edges.ravel(),
+        visuals.MeshVisual.__init__(self, vertices=vertices, faces=edges.ravel(order='C'),
                                     color=edge_color, mode='lines')
 
     @property
@@ -64,45 +64,45 @@ class SurfaceMeshVisual(visuals.CompoundVisual):
         The vertex coordinates
     
     faces : array_like
-        The face connectivity
+        The connectivity array of the triangular faces
 
-    vertex_colors : array_like
+    edges : array_like | None
+        The connectivity array of the edges
+
+    vertex_colors : array_like | None
         Colors to use for each vertex
     
-    face_colors : array_like
+    face_colors : array_like | None
         Colors to use for each face
 
-    color : str | vispy.color.Color
-        The color to use for the faces
+    edge_color : str | tuple | None
+        Color to use for the edges
 
-    edge_color : str | vispy.color.Color
-        The color to use for the faces outline
-
-    edges : array_like
-        The edge connectivity
+    color : str | tuple | None
+        Color to use
     """
 
     def __init__(self, vertices=None, faces=None, edges=None,
-                 vertex_colors=None, face_colors=None, edge_color=None, color=None,
-                 **kwargs):
+                 vertex_colors=None, face_colors=None, edge_color=None, color=None):
 
-        if vertex_colors is None and face_colors is None and color is None:
+        if all(c is None for c in (vertex_colors, face_colors, color)):
             color = (0.5, 0.5, 1.0, 1.0)
         
         # create mesh and outline visuals
         self._mesh = visuals.MeshVisual(vertices=vertices, faces=faces,
                                         vertex_colors=vertex_colors,
                                         face_colors=face_colors,
-                                        color=color)
+                                        color=color,
+                                        shading=None, mode='triangles')
 
         if edge_color is not None:
             self._outline = WireframeMesh(vertices=vertices, faces=faces,
-                                               edge_color=edge_color, edges=edges)
+                                          edges=edges, edge_color=edge_color)
         else:
             self._outline = visuals.MeshVisual()
 
         # initialize compound
-        visuals.CompoundVisual.__init__(self, subvisuals=[self._mesh, self._outline], **kwargs)
+        visuals.CompoundVisual.__init__(self, subvisuals=[self._mesh, self._outline])
             
         # set polygon offset to make outlines visible
         self._mesh.set_gl_state(polygon_offset_fill=True,

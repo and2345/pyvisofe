@@ -104,7 +104,7 @@ class ViewWidget(scene.Widget):
 
         self.grid = self.add_grid(spacing=0, margin=10)
         
-    def _configure(self, proj='3d'):
+    def _configure(self, proj='3d', interactive=True):
         if self._configured:
             return
 
@@ -115,10 +115,11 @@ class ViewWidget(scene.Widget):
         if proj.lower() == '3d':
             self.view.camera = 'turntable'
             self.view.camera.set_range((-1,1), (-1,1), (-1,1))
+            self.view.camera.interactive = interactive
         elif proj.lower() == '2d':
             self.view.camera = 'panzoom'
             self.view.camera.set_range((-1,1), (-1,1), (-1,1))
-            self.view.camera.interactive = False
+            self.view.camera.interactive = interactive
         else:
             raise ValueError("Invalid projection ({})".format(proj))
             
@@ -187,14 +188,37 @@ class ViewWidget(scene.Widget):
 
         return lb, ub
         
-    def plot(self, x, y, **kwargs):
+    def plot(self, x, y, color='black', symbol='o',
+             width=1., marker_size=10., connect='strip'):
         """
         Draw a data series using lines and markers.
+
+        Parameters
+        ----------
+
+        x, y : array_like
+            The data values
+
+        color : str
+            The color of the line
+
+        symbol : str
+            Marker symbol to use
+
+        width : float
+            The line width in px
+
+        marker_size : float
+           The marker size in px (if `0` no markers will be shown)
+    
+        connect : ['strip'] | 'segments'
+            Determines which vertices are connected by lines
         """
 
         self._configure(proj='2d')
 
-        line = scene.LinePlot(data=(x, y), connect='strip', **kwargs)
+        line = scene.LinePlot(data=(x, y), color=color, symbol=symbol,
+                              width=width, marker_size=marker_size, connect=connect)
 
         self.visuals += [line]
         self.view.add(line)
@@ -202,17 +226,31 @@ class ViewWidget(scene.Widget):
 
         return line
 
-    def triplot(self, x, y, triangles, **kwargs):
+    def triplot(self, x, y, faces, color='black'):
         """
         Draw an unstructured 2-dimensional grid.
+
+        Parameters
+        ----------
+
+        x, y, z : array_like
+            The vertex coordinate values as 1D arrays
+        
+        faces : array_like
+            The connectivity array of the triangular faces
+
+        color : str
+            The color to use
         """
 
         self._configure(proj='2d')
 
         return self.wireframe(x=x, y=y, z=np.zeros_like(x),
-                              triangles=triangles, **kwargs)
+                              faces=faces, edge_color=color)
         
-    def trisurface(self, x, y, z, triangles, **kwargs):
+    def trisurface(self, x, y, z, faces, edges=None,
+                   vertex_colors=None, face_colors=None, edge_color=None,
+                   color=None, vmin=None, vmax=None):
         """
         Draw a surface consisting of triangular patches.
 
@@ -222,26 +260,35 @@ class ViewWidget(scene.Widget):
         x, y, z : array_like
             The vertex coordinate values as 1D arrays
         
-        triangles : array_like
-            The triangle connectivity array
+        faces : array_like
+            The connectivity array of the triangular faces
 
-        **kwargs : dict
-            Keyword arguments to pass to :class:`SurfaceMeshVisual`
+        edges : array_like | None
+            The connectivity array of the edges
+
+        vertex_colors : array_like | None
+            Colors to use for each vertex
+
+        face_colors : array_like | None
+            Colors to use for each face
+
+        edge_color : str | tuple | None
+            Color to use for the edges
+
+        color : str | tuple | None
+            Color to use
+
+        vmin, vmax : float
+            Min/Max values for the colormap
         """
 
         self._configure(proj='3d')
         
         vertices = np.column_stack([x, y, z]).astype(np.float32)
-        faces = triangles.astype(np.uint32)
-        edges = kwargs.pop('edges', None)
+        faces = faces.astype(np.uint32)
 
-        color = kwargs.pop('color', None)
-        vertex_colors = kwargs.pop('vertex_colors', None)
-        face_colors = kwargs.pop('face_colors', None)
-        edge_color = kwargs.pop('edge_color', None)
-
-        zmin = kwargs.pop('zmin', z.min())
-        zmax = kwargs.pop('zmax', z.max())
+        vmin = vmin if vmin is not None else z.min()
+        vmax = vmax if vmax is not None else z.max()
 
         if all(c is None for c in [color, vertex_colors, face_colors]):
             if not np.allclose(zmin, zmax):
@@ -261,7 +308,7 @@ class ViewWidget(scene.Widget):
         
         return mesh
 
-    def wireframe(self, x, y, z, triangles, **kwargs):
+    def wireframe(self, x, y, z, faces, edges=None, edge_color='black'):
         """
         Draw a wireframe outline of a mesh.
 
@@ -271,25 +318,20 @@ class ViewWidget(scene.Widget):
         x, y, z : array_like
             The vertex coordinate values as 1D arrays
         
-        triangles : array_like
-            The triangle connectivity array
+        faces : array_like
+            The connectivity array of the triangular faces
 
-        **kwargs : dict
-            Keyword arguments to pass to :class:`WireframeMeshVisual`
+        edges : array_like | None
+            The connectivity array of the edges
+
+        edge_color : str | tuple | None
+            Color to use for the edges
         """
 
         self._configure(proj='3d')
 
         vertices = np.column_stack([x, y, z]).astype(np.float32)
-        faces = triangles.astype(np.uint32)
-        edges = kwargs.pop('edges', None)
-
-        if kwargs.has_key('edge_color'):
-            edge_color = kwargs.pop('edge_color', 'black')
-        elif kwargs.has_key('color'):
-            edge_color = kwargs.pop('color', 'black')
-        else:
-            edge_color = 'black'
+        faces = faces.astype(np.uint32)
 
         mesh = visuals.WireframeMesh(vertices=vertices, faces=faces, edges=edges,
                                      edge_color=edge_color)
@@ -300,6 +342,8 @@ class ViewWidget(scene.Widget):
 
         return mesh
 
+    def scatter2(self, x, y, ):
+        vertices = 0
     def _get_mesh_data(self, x, y, z, triangles, **kwargs):
         pass
 

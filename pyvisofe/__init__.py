@@ -8,7 +8,7 @@ Scientific visualization software for the finite element software package PySOFE
 # current version
 __version__ = '0.1.0'
 
-from . import canvas, widget, visuals
+from . import canvas, plotting, visuals
 
 from .canvas import Figure
-from .widget import plot, triplot, trisurface, wireframe
+from .plotting import plot, triplot, trisurface, wireframe
