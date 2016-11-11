@@ -11,4 +11,4 @@ __version__ = '0.1.0'
 from . import canvas, widget, visuals
 
 from .canvas import Figure
-from .widget import ViewWidget
+from .widget import plot, triplot, trisurface, wireframe
