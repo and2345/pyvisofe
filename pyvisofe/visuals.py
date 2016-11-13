@@ -141,6 +141,76 @@ class SurfaceMeshVisual(visuals.CompoundVisual):
     def outline(self, outline):
         self._outline = outline
 
+class ScatterPlotVisual(visuals.Visual):
+    vertex_shader = """
+varying vec4 v_color;
+
+void main() {
+    gl_Position = $transform(vec4($position, 1));
+    gl_PointSize = $size;
+
+    v_color = $color;
+}
+"""
+    fragment_shader = """
+varying vec4 v_color;
+
+void main() {
+    //gl_FragColor = $color;
+
+    gl_FragColor = v_color;
+
+    //vec2 pos = mod(gl_FragCoord.xy, vec2(50.0)) - vec2(25.0);
+    //float sqdist = dot(pos, pos);
+    //gl_FragColor = mix(vec4())
+
+    //float d = 1 - length(gl_PointCoord - vec2(.5,.5)) / (sqrt(2)/2);
+    //gl_FragColor = d * $color;
+    //gl_FragColor.a = d;
+}
+"""
+
+    def __init__(self, vertices=None, size=1.,
+                 vertex_colors=None, color=None):
+
+        if vertices is not None:
+            vertices = np.asarray(vertices, dtype=np.float32)
+            if np.size(vertices, axis=1) == 2:
+                vertices = np.column_stack([vertices,
+                                            np.zeros_like(vertices[:,0])])
+
+        if vertex_colors is not None:
+            vertex_colors = np.asarray(vertex_colors, dtype=np.float32)
+                
+        visuals.Visual.__init__(self, self.vertex_shader, self.fragment_shader)
+
+        self.vbo = gloo.VertexBuffer(vertices)
+        self.cbo = gloo.VertexBuffer(vertex_colors)
+
+        self.shared_program.vert['position'] = self.vbo
+        self.shared_program.vert['size'] = size
+        self.shared_program.vert['color'] = self.cbo
+        #self.shared_program.frag['color'] = vertex_colors
+
+        self._bounds = None
+        if vertices is not None:
+            self._bounds = zip(vertices.min(axis=0), vertices.max(axis=0))
+
+        self.set_gl_state(blend=True,
+                          blend_func=('src_alpha', 'one_minus_src_alpha'))
+            
+        self._draw_mode = 'points'
+
+    def _compute_bounds(self, axis, view):
+        if self._bounds is None:
+            return None
+        else:
+            return self._bounds[axis]
+        
+    def _prepare_transforms(self, view):
+        view.view_program.vert['transform'] = view.get_transform()
+        
 # these are the actual visuals that can be added to a scene
 WireframeMesh = scene.visuals.create_visual_node(WireframeMeshVisual)
 SurfaceMesh = scene.visuals.create_visual_node(SurfaceMeshVisual)
+ScatterPlot = scene.visuals.create_visual_node(ScatterPlotVisual)

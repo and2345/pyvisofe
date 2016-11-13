@@ -342,8 +342,28 @@ class ViewWidget(scene.Widget):
 
         return mesh
 
-    def scatter2(self, x, y, ):
-        vertices = 0
+    def scatter2(self, x, y, size=1., vertex_colors=None):
+        self._configure(proj='2d')
+        z = np.zeros_like(x)
+
+        return self.scatter3(x=x, y=y, z=z, size=size,
+                             vertex_colors=vertex_colors)
+
+    def scatter3(self, x, y, z, size=1., vertex_colors=None):
+        self._configure(proj='3d')
+
+        vertices = np.column_stack([x, y, z]).astype(np.float32)
+        
+        scatter = visuals.ScatterPlot(vertices=vertices, size=size,
+                                      vertex_colors=vertex_colors)
+
+        self.visuals += [scatter]
+        self._autoscale()
+        self.view.add(scatter)
+
+        return scatter
+
+        
     def _get_mesh_data(self, x, y, z, triangles, **kwargs):
         pass
 
