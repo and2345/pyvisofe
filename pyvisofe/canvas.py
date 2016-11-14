@@ -155,6 +155,22 @@ class ViewWidget(scene.Widget):
         
         for mesh in self.visuals:
             mesh.transform = T
+
+    def _get_vertex_colors(self, values, vmin=None, vmax=None, alpha=1.):
+        assert values.ndim == 1
+
+        vmin = vmin if vmin is not None else values.min()
+        vmax = vmax if vmax is not None else values.max()
+
+        if not np.allclose(vmin, vmax):
+            t = (values - vmin) / (vmax - vmin)
+        else:
+            t = (values - 0.5*vmin)
+            
+        vcolors = self.cmap.map( np.expand_dims(t, axis=1) )
+        vcolors[:,3] = alpha
+
+        return vcolors
             
     def _update_vertex_colors(self):
         # get min/max values
@@ -342,7 +358,7 @@ class ViewWidget(scene.Widget):
 
         return mesh
 
-    def scatter2d(self, x, y, size=1, vertex_colors=None):
+    def scatter2d(self, x, y, c=None, size=1, vertex_colors=None):
         """
         Plot scattered 2d data points.
 
@@ -352,6 +368,9 @@ class ViewWidget(scene.Widget):
         x, y : array_like
             The vertex coordinate values as 1D arrays
 
+        c : array_like
+            Scalar values to use if vertex colors are not given
+
         size : float
             The point size in px
 
@@ -360,14 +379,15 @@ class ViewWidget(scene.Widget):
 
         color : tuple | None
             Color to use
-        self._configure(proj='2d')
         """
+        self._configure(proj='2d')
         z = np.zeros_like(x)
 
-        return self.scatter3(x=x, y=y, z=z, size=size,
+        return self.scatter3(x=x, y=y, z=z, c=c, size=size,
                              vertex_colors=vertex_colors)
 
-    def scatter3d(self, x, y, z, size=1, vertex_colors=None, color=(0,0,0,1)):
+    def scatter3d(self, x, y, z, c=None, size=1,
+                  vertex_colors=None, color=None, alpha=1.):
         """
         Plot scattered 3d data points.
 
@@ -377,6 +397,9 @@ class ViewWidget(scene.Widget):
         x, y, z : array_like
             The vertex coordinate values as 1D arrays
 
+        c : array_like
+            Scalar values to use if vertex colors are not given
+
         size : float
             The point size in px
 
@@ -385,14 +408,22 @@ class ViewWidget(scene.Widget):
 
         color : tuple | None
             Color to use
+
+        alpha : float
+            The alpha value of the colors (opacity)
         """
         self._configure(proj='3d')
 
         vertices = np.column_stack([x, y, z]).astype(np.float32)
 
         if vertex_colors is None:
-            vertex_colors = np.repeat([color], np.size(vertices, axis=0), axis=0)
-        
+            if c is not None:
+                vertex_colors = self._get_vertex_colors(values=c, alpha=alpha)
+            elif color is not None:
+                vertex_colors = np.repeat([color], np.size(vertices, axis=0), axis=0)
+            else:
+                vertex_colors = np.repeat([(0,0,0,alpha)], np.size(vertices, axis=0), axis=0)
+                
         scatter = visuals.ScatterPlot(vertices=vertices, size=size,
                                       vertex_colors=vertex_colors)
 
@@ -401,8 +432,3 @@ class ViewWidget(scene.Widget):
         self.view.add(scatter)
 
         return scatter
-
-        
-    def _get_mesh_data(self, x, y, z, triangles, **kwargs):
-        pass
-

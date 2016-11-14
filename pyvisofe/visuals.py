@@ -175,9 +175,11 @@ void main() {
 varying vec4 v_color;
 
 void main() {
-    //gl_FragColor = $color;
-
     gl_FragColor = v_color;
+}
+"""
+    """
+    //gl_FragColor = $color;
 
     //vec2 pos = mod(gl_FragCoord.xy, vec2(50.0)) - vec2(25.0);
     //float sqdist = dot(pos, pos);
@@ -186,8 +188,7 @@ void main() {
     //float d = 1 - length(gl_PointCoord - vec2(.5,.5)) / (sqrt(2)/2);
     //gl_FragColor = d * $color;
     //gl_FragColor.a = d;
-}
-"""
+    """
 
     def __init__(self, vertices=None, size=1.,
                  vertex_colors=None, color=None):
@@ -215,7 +216,7 @@ void main() {
         if vertices is not None:
             self._bounds = zip(vertices.min(axis=0), vertices.max(axis=0))
 
-        self.set_gl_state(blend=True,
+        self.set_gl_state(depth_test=True, blend=True,
                           blend_func=('src_alpha', 'one_minus_src_alpha'))
             
         self._draw_mode = 'points'
