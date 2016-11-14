@@ -291,10 +291,10 @@ class ViewWidget(scene.Widget):
         vmax = vmax if vmax is not None else z.max()
 
         if all(c is None for c in [color, vertex_colors, face_colors]):
-            if not np.allclose(zmin, zmax):
-                t = (z - zmin) / (zmax - zmin)
+            if not np.allclose(vmin, vmax):
+                t = (z - vmin) / (vmax - vmin)
             else:
-                t = (z - 0.5*zmin)
+                t = (z - 0.5*vmin)
 
             vertex_colors = self.cmap.map( np.expand_dims(t, axis=1) )
 
@@ -342,17 +342,56 @@ class ViewWidget(scene.Widget):
 
         return mesh
 
-    def scatter2(self, x, y, size=1., vertex_colors=None):
+    def scatter2d(self, x, y, size=1, vertex_colors=None):
+        """
+        Plot scattered 2d data points.
+
+        Parameters
+        ----------
+
+        x, y : array_like
+            The vertex coordinate values as 1D arrays
+
+        size : float
+            The point size in px
+
+        vertex_colors : array_like | None
+            Colors to use for each vertex
+
+        color : tuple | None
+            Color to use
         self._configure(proj='2d')
+        """
         z = np.zeros_like(x)
 
         return self.scatter3(x=x, y=y, z=z, size=size,
                              vertex_colors=vertex_colors)
 
-    def scatter3(self, x, y, z, size=1., vertex_colors=None):
+    def scatter3d(self, x, y, z, size=1, vertex_colors=None, color=(0,0,0,1)):
+        """
+        Plot scattered 3d data points.
+
+        Parameters
+        ----------
+
+        x, y, z : array_like
+            The vertex coordinate values as 1D arrays
+
+        size : float
+            The point size in px
+
+        vertex_colors : array_like | None
+            Colors to use for each vertex
+
+        color : tuple | None
+            Color to use
+        """
         self._configure(proj='3d')
 
         vertices = np.column_stack([x, y, z]).astype(np.float32)
+
+        if vertex_colors is None:
+            vertex_colors = np.repeat([color], np.size(vertices, axis=0), axis=0)
         
         scatter = visuals.ScatterPlot(vertices=vertices, size=size,
                                       vertex_colors=vertex_colors)

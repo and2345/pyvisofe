@@ -142,6 +142,25 @@ class SurfaceMeshVisual(visuals.CompoundVisual):
         self._outline = outline
 
 class ScatterPlotVisual(visuals.Visual):
+    """
+    Visual the plot scattered data points.
+
+    Parameters
+    ----------
+
+    vertices : array_like
+        The vertex coordinates
+
+    size : float
+        The point size
+    
+    vertex_colors : array_like | None
+        Colors to use for each vertex
+    
+    color : str | tuple | None
+        Color to use
+    """
+
     vertex_shader = """
 varying vec4 v_color;
 

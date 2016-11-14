@@ -1,6 +1,9 @@
 # IMPORTS
 from .canvas import Figure
 
+__all__ = ['plot', 'triplot', 'trisurface', 'wireframe',
+           'scatter2d', 'scatter3d']
+
 # some wrappers for functional visualization
 def plot(x, y, **kwargs):
     """
@@ -37,6 +40,24 @@ def wireframe(x, y, z, triangles, **kwargs):
     ax = fig[0, 0]
 
     return ax.wireframe(x, y, z, triangles, **kwargs)
+
+def scatter2d(x, y, **kwargs):
+    """
+    See :py:func:`ViewWidget.scatter2d`.
+    """
+    fig = Figure(show=True)
+    ax = fig[0,0]
+
+    return ax.scatter2d(x, y, **kwargs)
+
+def scatter3d(x, y, z, **kwargs):
+    """
+    See :py:func:`ViewWidget.scatter3d`.
+    """
+    fig = Figure(show=True)
+    ax = fig[0,0]
+
+    return ax.scatter3d(x, y, z, **kwargs)
 
 # def heatmap(x, y, z, triangles, **kwargs):
 #     """
