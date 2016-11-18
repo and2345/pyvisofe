@@ -387,7 +387,7 @@ class ViewWidget(scene.Widget):
                              vertex_colors=vertex_colors)
 
     def scatter3d(self, x, y, z, c=None, size=1,
-                  vertex_colors=None, color=None, alpha=1.):
+                  colors=None, alpha=1.):
         """
         Plot scattered 3d data points.
 
@@ -398,34 +398,28 @@ class ViewWidget(scene.Widget):
             The vertex coordinate values as 1D arrays
 
         c : array_like
-            Scalar values to use if vertex colors are not given
+            Scalar values to use if `colors` are not given
 
         size : float
             The point size in px
 
-        vertex_colors : array_like | None
-            Colors to use for each vertex
-
-        color : tuple | None
-            Color to use
+        colors : str | tuple | array_like | None
+            Colors used to draw each data point
 
         alpha : float
-            The alpha value of the colors (opacity)
+            The alpha value for the colors (opacity)
         """
         self._configure(proj='3d')
 
-        vertices = np.column_stack([x, y, z]).astype(np.float32)
+        pos = np.column_stack([x, y, z]).astype(np.float32)
 
-        if vertex_colors is None:
+        if colors is None:
             if c is not None:
-                vertex_colors = self._get_vertex_colors(values=c, alpha=alpha)
-            elif color is not None:
-                vertex_colors = np.repeat([color], np.size(vertices, axis=0), axis=0)
+                colors = self._get_vertex_colors(values=c, alpha=alpha)
             else:
-                vertex_colors = np.repeat([(0,0,0,alpha)], np.size(vertices, axis=0), axis=0)
+                colors = np.repeat([(0,0,0,alpha)], np.size(vertices, axis=0), axis=0)
                 
-        scatter = visuals.ScatterPlot(vertices=vertices, size=size,
-                                      vertex_colors=vertex_colors)
+        scatter = visuals.ScatterPlot(pos=pos, size=size, colors=colors)
 
         self.visuals += [scatter]
         self._autoscale()

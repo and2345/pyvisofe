@@ -141,7 +141,29 @@ class SurfaceMeshVisual(visuals.CompoundVisual):
     def outline(self, outline):
         self._outline = outline
 
-class ScatterPlotVisual(visuals.Visual):
+class ScatterPlotVisual(visuals.MarkersVisual):
+    """
+    Visual the plot scattered data points.
+
+    Parameters
+    ----------
+
+    pos : array_like
+        The data point coordinates
+
+    size : float | array_like
+        The point size in px
+    
+    colors : str | array_like
+        Colors used to draw each data point
+    """
+
+    def __init__(self, pos=None, size=10., colors='black'):
+        visuals.MarkersVisual.__init__(self, pos=pos, size=size, face_color=colors,
+                                       symbol='o', edge_width=1., edge_width_rel=None,
+                                       edge_color=colors, scaling=False)
+        
+class MyScatterPlotVisual(visuals.Visual):
     """
     Visual the plot scattered data points.
 
@@ -234,3 +256,4 @@ void main() {
 WireframeMesh = scene.visuals.create_visual_node(WireframeMeshVisual)
 SurfaceMesh = scene.visuals.create_visual_node(SurfaceMeshVisual)
 ScatterPlot = scene.visuals.create_visual_node(ScatterPlotVisual)
+MyScatterPlot = scene.visuals.create_visual_node(MyScatterPlotVisual)
