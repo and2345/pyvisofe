@@ -1,7 +1,7 @@
 # IMPORTS
 from .canvas import Figure
 
-__all__ = ['plot', 'triplot', 'trisurface', 'wireframe',
+__all__ = ['plot', 'lineplot', 'triplot', 'trisurface', 'wireframe',
            'scatter2d', 'scatter3d']
 
 # some wrappers for functional visualization
@@ -13,6 +13,15 @@ def plot(x, y, **kwargs):
     ax = fig[0, 0]
 
     return ax.plot(x, y, **kwargs)
+
+def lineplot(x, y, z=None, **kwargs):
+    """
+    See :py:func:`ViewWidget.lineplot`.
+    """
+    fig = Figure(show=True)
+    ax = fig[0, 0]
+
+    return ax.lineplot(x, y, z, **kwargs)
 
 def triplot(x, y, triangles, **kwargs):
     """

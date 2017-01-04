@@ -203,8 +203,9 @@ class ViewWidget(scene.Widget):
             lb, ub = ("", "")
 
         return lb, ub
-        
-    def plot(self, x, y, color='black', symbol='o',
+
+
+    def plot(self, x, y, z=None, color='black', symbol='o',
              width=1., marker_size=10., connect='strip'):
         """
         Draw a data series using lines and markers.
@@ -212,11 +213,11 @@ class ViewWidget(scene.Widget):
         Parameters
         ----------
 
-        x, y : array_like
+        x, y[, z] : array_like
             The data values
 
         color : str
-            The color of the line
+            The color of the lines
 
         symbol : str
             Marker symbol to use
@@ -228,12 +229,45 @@ class ViewWidget(scene.Widget):
            The marker size in px (if `0` no markers will be shown)
     
         connect : ['strip'] | 'segments'
+            Determines how the data points are connected by lines
+        """
+        self.lineplot(x, y, z, color, symbol, width, marker_size, connect)
+
+    def lineplot(self, x, y, z=None, connect='strip',
+                 color='black', symbol='o', width=1., marker_size=10.):
+        """
+        Draw a series of lines and markers.
+
+        Parameters
+        ----------
+
+        x, y[, z] : array_like
+            The vertex coordinate values as 1D arrays
+
+        connect : ['strip'] | 'segments' or numpy.ndarray
             Determines which vertices are connected by lines
+        
+        color : str
+            The color of the line
+
+        symbol : str
+            Marker symbol to use
+
+        width : float
+            The line width in px
+
+        marker_size : float
+           The marker size in px (if `0` no markers will be shown)
         """
 
-        self._configure(proj='2d')
+        if z is None:
+            self._configure(proj='2d')
+            data = (x, y)
+        else:
+            self._configure(proj='3d')
+            data = (x, y, z)
 
-        line = scene.LinePlot(data=(x, y), color=color, symbol=symbol,
+        line = scene.LinePlot(data=data, color=color, symbol=symbol,
                               width=width, marker_size=marker_size, connect=connect)
 
         self.visuals += [line]
