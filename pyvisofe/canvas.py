@@ -276,27 +276,41 @@ class ViewWidget(scene.Widget):
 
         return line
 
-    def triplot(self, x, y, faces, color='black'):
+    def triplot(self, x, y, faces, vertex_colors=None,
+                face_colors=None, edge_color='black', color=None):
         """
         Draw an unstructured 2-dimensional grid.
 
         Parameters
         ----------
 
-        x, y, z : array_like
+        x, y : array_like
             The vertex coordinate values as 1D arrays
         
         faces : array_like
             The connectivity array of the triangular faces
 
-        color : str
+        vertex_colors : array_like | None
+            The colors to use for each vertex
+    
+        face_colors : array_like | None
+            The colors to use for each face
+        
+        edge_color : str
+            The color to use for the edges
+
+        color : str | tuple | None
             The color to use
         """
 
         self._configure(proj='2d')
 
-        return self.wireframe(x=x, y=y, z=np.zeros_like(x),
-                              faces=faces, edge_color=color)
+        return self.trisurface(x=x, y=y, z=np.zeros_like(x), faces=faces,
+                               edges=None,
+                               vertex_colors=vertex_colors,
+                               face_colors=face_colors,
+                               edge_color=edge_color,
+                               color=color)
         
     def trisurface(self, x, y, z, faces, edges=None,
                    vertex_colors=None, face_colors=None, edge_color=None,
@@ -340,7 +354,7 @@ class ViewWidget(scene.Widget):
         vmin = vmin if vmin is not None else z.min()
         vmax = vmax if vmax is not None else z.max()
 
-        if all(c is None for c in [color, vertex_colors, face_colors]):
+        if all(c is None for c in [color, vertex_colors, face_colors, edge_color]):
             if not np.allclose(vmin, vmax):
                 t = (z - vmin) / (vmax - vmin)
             else:
@@ -383,8 +397,9 @@ class ViewWidget(scene.Widget):
         vertices = np.column_stack([x, y, z]).astype(np.float32)
         faces = faces.astype(np.uint32)
 
-        mesh = visuals.WireframeMesh(vertices=vertices, faces=faces, edges=edges,
-                                     edge_color=edge_color)
+        mesh = visuals.SurfaceMesh(vertices=vertices, faces=faces, edges=edges,
+                                   vertex_colors=None, face_colors=None,
+                                   edge_color=edge_color, color=None)
 
         self.visuals += [mesh]
         self._autoscale()

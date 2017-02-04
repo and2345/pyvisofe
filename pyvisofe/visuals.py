@@ -10,49 +10,6 @@ from vispy.color import get_colormap
 
 from .  import utils
 
-class WireframeMeshVisual(visuals.MeshVisual):
-    """
-    Visual that displays a wireframe mesh.
-
-    Parameters
-    ----------
-
-    vertices : array_like
-        The vertex coordinates
-    
-    faces : array_like
-        The connectivity array of the triangular faces
-
-    edges : array_like | None
-        The connectivity array of the edges
-
-    edge_color : str | tuple | None
-        Color to use for the edges
-    """
-
-    def __init__(self, vertices=None, faces=None, edges=None, edge_color='black'):
-
-        # create wireframe mesh visual
-        if edges is None and faces is not None:
-            edges = utils.unique_rows(np.vstack(faces.take([[0, 1],
-                                                            [0, 2],
-                                                            [1, 2]], axis=1)))
-
-        # initialize mesh visual
-        visuals.MeshVisual.__init__(self, vertices=vertices, faces=edges.ravel(order='C'),
-                                    color=edge_color, mode='lines')
-
-    @property
-    def edge_color(self):
-        """
-        The color of the edges.
-        """
-        return self.color
-
-    @edge_color.setter
-    def edge_color(self, color):
-        self.color = color
-
 class SurfaceMeshVisual(visuals.CompoundVisual):
     """
     Visual that displays a surface mesh.
@@ -85,55 +42,64 @@ class SurfaceMeshVisual(visuals.CompoundVisual):
     def __init__(self, vertices=None, faces=None, edges=None,
                  vertex_colors=None, face_colors=None, edge_color=None, color=None):
 
-        if all(c is None for c in (vertex_colors, face_colors, color)):
-            color = (0.5, 0.5, 1.0, 1.0)
-        
         # create mesh and outline visuals
-        self._mesh = visuals.MeshVisual(vertices=vertices, faces=faces,
-                                        vertex_colors=vertex_colors,
-                                        face_colors=face_colors,
-                                        color=color,
-                                        shading=None, mode='triangles')
+        self._patches = visuals.MeshVisual(vertices=vertices, faces=faces,
+                                           vertex_colors=vertex_colors,
+                                           face_colors=face_colors,
+                                           color=color,
+                                           shading=None, mode='triangles')
 
-        if edge_color is not None:
-            self._outline = WireframeMesh(vertices=vertices, faces=faces,
-                                          edges=edges, edge_color=edge_color)
+        if edges is None:
+                edges = utils.unique_rows(np.vstack(faces.take([[0, 1],
+                                                                [0, 2],
+                                                                [1, 2]], axis=1)))
+
+        if edge_color is not None and str.lower(edge_color) != "none":
+            self._outline = visuals.MeshVisual(vertices=vertices,
+                                               faces=edges.ravel(order='C'),
+                                               color=edge_color,
+                                               mode='lines')
         else:
-            self._outline = visuals.MeshVisual()
+            self._outline = visuals.MeshVisual(vertices=vertices,
+                                               faces=edges.ravel(order='C'),
+                                               color="black",
+                                               mode='lines')
+            self._outline.visible = False
+            #self._outline = visuals.MeshVisual()
 
         # initialize compound
-        visuals.CompoundVisual.__init__(self, subvisuals=[self._mesh, self._outline])
+        visuals.CompoundVisual.__init__(self, subvisuals=[self._patches, self._outline])
             
         # set polygon offset to make outlines visible
-        self._mesh.set_gl_state(polygon_offset_fill=True,
-                                polygon_offset=(1, 1),
-                                depth_test=True)
+        self._patches.set_gl_state(polygon_offset_fill=True,
+                                   polygon_offset=(1, 1),
+                                   depth_test=True)
     
     @property
-    def mesh(self):
+    def patches(self):
         """
-        The vispy.visuals.MeshVisual that used to draw the filled triangles.
+        The vispy.visuals.MeshVisual that is used to draw the filled triangles.
         """
-        return self._mesh
+        return self._patches
 
-    @mesh.setter
-    def mesh(self, mesh):
-        self._mesh = mesh
+    @patches.setter
+    def patches(self, patches):
+        self._patches = patches
 
     @property
     def mesh_data(self):
         """
-        The mesh data.
+        The patches mesh data.
         """
-        return self._mesh.mesh_data
+        return self._patches.mesh_data
 
     def mesh_data_changed(self):
-        return self._mesh.mesh_data_changed()
+        return self._patches.mesh_data_changed()
 
     @property
     def outline(self):
         """
-        The vispy.visuals.MeshVisual that used to draw the triangle outlines.
+        The vispy.visuals.MeshVisual that is used to draw the triangle outlines.
         """
         return self._outline
 
@@ -253,7 +219,6 @@ void main() {
         view.view_program.vert['transform'] = view.get_transform()
         
 # these are the actual visuals that can be added to a scene
-WireframeMesh = scene.visuals.create_visual_node(WireframeMeshVisual)
 SurfaceMesh = scene.visuals.create_visual_node(SurfaceMeshVisual)
 ScatterPlot = scene.visuals.create_visual_node(ScatterPlotVisual)
 MyScatterPlot = scene.visuals.create_visual_node(MyScatterPlotVisual)
